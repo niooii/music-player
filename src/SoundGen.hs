@@ -9,6 +9,7 @@ type Seconds = Float
 type Samples = Float
 type Hz = Float
 
+-- constant variables for now
 volume :: Float
 volume = 0.5
 
@@ -18,26 +19,32 @@ outputFilePath = "out.bin"
 sampleRate :: Float
 sampleRate = 48000.0
 
-noteFreq :: Note -> Hz
-noteFreq note = 55.0 * 2 ** (toSemitones note/12)
+-- Get the frequency of a note (TODO! key signatures?)
+toFreq     :: Note -> Hz
+toFreq note = 55.0 * 2 ** (1/24 * fromIntegral (toQuatertones note))
 
--- generate a single wave at a frequency
-makeWave :: Note -> Seconds -> [Float]
-makeWave note secs = map ((* (volume / 3)) . sin . (* step)) [0.0 .. sampleRate * secs]
+toSeconds          :: BPM -> Beats -> Seconds
+toSeconds bpm beats = beatDuration * beats
     where
-    hz = noteFreq note
-    step = hz * 2 * pi / sampleRate
+        beatDuration = 60.0 / bpm
 
+-- Generate a single wave at a given frequency (TODO! attack/release)
+genWave        :: Hz -> Seconds -> [Float]
+genWave hz secs = map ((* (volume / 3)) . sin . (* step)) [0.0 .. sampleRate * secs]
+    where
+        step = hz * 2 * pi / sampleRate
+
+-- Test stuff
 notes :: [Note]
-notes = [Note A O3 (Just HalfSharp), Note C O4 (Just HalfSharp), Note E O4 (Just HalfSharp), Note G O4 (Just HalfSharp)]
+notes = [Note A O3 Nothing, Note C O4 Nothing]
 
-durations :: [Seconds]
-durations = [4, 3, 3, 3]
+durations :: [Beats]
+durations = [2, 1, 1, 1]
 
 wave :: [Float]
-wave = map sum $ transpose $ map (uncurry makeWave) $ zip notes durations
+wave = map sum $ transpose $ zipWith genWave (map toFreq notes) (map (toSeconds 120) durations)
 
-saveSounds :: FilePath -> IO ()
+saveSounds   :: FilePath -> IO ()
 saveSounds fp = BL.writeFile fp $ BB.toLazyByteString $ foldMap BB.floatLE wave
 
 playTest :: IO ()

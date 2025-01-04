@@ -4,7 +4,9 @@ module Music
     BaseNote(..),
     Accidental(..),
     Note(..),
-    toSemitones
+    BPM,
+    Beats,
+    toQuatertones
 ) 
 where
 
@@ -20,35 +22,38 @@ data Accidental = Sharp | Flat | DoubleSharp | DoubleFlat | HalfSharp | HalfFlat
 data Note = Note BaseNote Octave (Maybe Accidental)
     deriving (Eq, Show)
 
-octaveToSemitones :: Octave -> Float
-octaveToSemitones oct = 12 * fromIntegral(fromEnum oct)
+type BPM = Float
 
-baseNoteToSemitones :: BaseNote -> Float
-baseNoteToSemitones note = case note of
+-- Relative to the BPM, eg. 1 beat = whole note, 1/16 beat = sixteenth
+type Beats = Float
+
+type Quatertones = Int
+
+octaveToQuatertones :: Octave -> Quatertones
+octaveToQuatertones oct = 24 * fromEnum oct
+
+baseNoteToQuatertones :: BaseNote -> Quatertones
+baseNoteToQuatertones note = case note of
     A -> 0
-    B -> 2
-    C -> -9
-    D -> -7
-    E -> -5
-    F -> -4
-    G -> -2
+    B -> 4
+    C -> -18
+    D -> -14
+    E -> -10
+    F -> -8
+    G -> -4
 
--- TODO! make this take an Accidental then handle maybe cases elsewhere
-accidentalToSemitones :: Maybe Accidental -> Float
-accidentalToSemitones Nothing = 0
-accidentalToSemitones (Just acc) = case acc of
-    HalfSharp -> 0.5
-    HalfFlat -> -0.5
-    Sharp -> 1
-    Flat -> -1
-    DoubleSharp -> 2
-    DoubleFlat -> -2
+accidentalToQuatertones :: Accidental -> Quatertones
+accidentalToQuatertones acc = case acc of
+    HalfSharp -> 1
+    HalfFlat -> -1
+    Sharp -> 2
+    Flat -> -2
+    DoubleSharp -> 4
+    DoubleFlat -> -4
 
--- float semitone definition.. cancer or cured..
--- TODO! just make this int man and define everything in quatertones 
-toSemitones :: Note -> Float
-toSemitones (Note base octave accidental) = baseSemitones + octSemitones + accSemitones
+toQuatertones :: Note -> Quatertones
+toQuatertones (Note base octave accidental) = baseSemitones + octSemitones + accSemitones
     where
-        baseSemitones = baseNoteToSemitones base
-        octSemitones = octaveToSemitones octave
-        accSemitones = accidentalToSemitones accidental
+        baseSemitones = baseNoteToQuatertones base
+        octSemitones = octaveToQuatertones octave
+        accSemitones = maybe 0 accidentalToQuatertones accidental
