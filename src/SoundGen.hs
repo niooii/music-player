@@ -36,10 +36,10 @@ genWave hz secs = map ((* (volume / 3)) . sin . (* step)) [0.0 .. sampleRate * s
 
 -- Test stuff
 notes :: [Note]
-notes = [Note A O3 Nothing, Note C O4 Nothing]
+notes = [Note A O3 Nothing, Note C O4 Nothing, Note E O4 Nothing, Note G O4 Nothing]
 
 durations :: [Beats]
-durations = [2, 1, 1, 1]
+durations = [1/3, 2/3, 1, 4/3]
 
 wave :: [Float]
 wave = map sum $ transpose $ zipWith genWave (map toFreq notes) (map (toSeconds 120) durations)
