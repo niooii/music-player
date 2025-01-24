@@ -11,7 +11,10 @@ type Hz = Float
 
 -- constant variables for now
 volume :: Float
-volume = 0.5
+volume = 1
+
+tempBpm :: Float
+tempBpm = 60
 
 outputFilePath :: FilePath
 outputFilePath = "out.bin"
@@ -33,19 +36,27 @@ genWave        :: Hz -> Seconds -> [Float]
 genWave hz secs = map ((* (volume / 3)) . sin . (* step)) [0.0 .. sampleRate * secs]
     where
         step = hz * 2 * pi / sampleRate
+durations = [1/3, 2/3, 1, 4/3]
+
+-- Generate a wave for a note and n beats
+wave    :: Note -> Beats -> [Float]
+wave n b = genWave (toFreq n) $ toSeconds tempBpm b
+
+-- Generates a wave for multiple notes, each with their own beats
+waves      :: [Note] -> [Beats] -> [Float]
+waves ns bs = map sum $ transpose $ zipWith wave ns bs
 
 -- Test stuff
 notes :: [Note]
 notes = [Note A O3 Nothing, Note C O4 Nothing, Note E O4 Nothing, Note G O4 Nothing]
 
 durations :: [Beats]
-durations = [1/3, 2/3, 1, 4/3]
 
-wave :: [Float]
-wave = map sum $ transpose $ zipWith genWave (map toFreq notes) (map (toSeconds 120) durations)
+test :: [Float]
+test = waves notes durations
 
 saveSounds   :: FilePath -> IO ()
-saveSounds fp = BL.writeFile fp $ BB.toLazyByteString $ foldMap BB.floatLE wave
+saveSounds fp = BL.writeFile fp $ BB.toLazyByteString $ foldMap BB.floatLE test
 
 playTest :: IO ()
 playTest = do
