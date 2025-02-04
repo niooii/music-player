@@ -36,7 +36,6 @@ genWave        :: Hz -> Seconds -> [Float]
 genWave hz secs = map ((* (volume / 3)) . sin . (* step)) [0.0 .. sampleRate * secs]
     where
         step = hz * 2 * pi / sampleRate
-durations = [1/3, 2/3, 1, 4/3]
 
 -- Generate a wave for a note and n beats
 wave    :: Note -> Beats -> [Float]
@@ -51,6 +50,7 @@ notes :: [Note]
 notes = [Note A O3 Nothing, Note C O4 Nothing, Note E O4 Nothing, Note G O4 Nothing]
 
 durations :: [Beats]
+durations = [4/3, 4/3, 4/3, 4/3]
 
 test :: [Float]
 test = waves notes durations
